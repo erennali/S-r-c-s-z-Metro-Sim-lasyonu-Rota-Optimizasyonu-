@@ -36,17 +36,52 @@ class Istasyon:
         self.komsular.append((istasyon, sure))
 
 class MetroAgi:
+    """
+    Metro ağını temsil eden sınıf.
+    
+    Bu sınıf, metro istasyonlarını ve hatlarını yönetir, en kısa ve en hızlı rotaları bulur.
+    """
     def __init__(self):
         self.istasyonlar: Dict[str, Istasyon] = {}
         self.hatlar: Dict[str, List[Istasyon]] = defaultdict(list)
 
     def istasyon_ekle(self, idx: str, ad: str, hat: str) -> None:
-        if id not in self.istasyonlar:
+        """
+        Yeni bir metro istasyonu ekler.
+        
+        Args:
+            idx (str): İstasyonun benzersiz kimlik numarası
+            ad (str): İstasyonun adı
+            hat (str): İstasyonun bulunduğu metro hattı
+            
+        Raises:
+            ValueError: İstasyon bilgileri boş olduğunda
+        """
+        if not idx or not ad or not hat:
+            raise ValueError("İstasyon bilgileri boş olamaz")
+        if idx not in self.istasyonlar:
             istasyon = Istasyon(idx, ad, hat)
             self.istasyonlar[idx] = istasyon
             self.hatlar[hat].append(istasyon)
 
     def baglanti_ekle(self, istasyon1_id: str, istasyon2_id: str, sure: int) -> None:
+        """
+        İki istasyon arasına bağlantı ekler.
+        
+        Args:
+            istasyon1_id (str): Birinci istasyonun kimlik numarası
+            istasyon2_id (str): İkinci istasyonun kimlik numarası
+            sure (int): İki istasyon arasındaki süre (dakika)
+            
+        Raises:
+            KeyError: İstasyon bulunamadığında
+            ValueError: Süre negatif olduğunda
+        """
+        if sure < 0:
+            raise ValueError("İstasyonlar arası süre negatif olamaz")
+        if istasyon1_id not in self.istasyonlar or istasyon2_id not in self.istasyonlar:
+            raise KeyError("İstasyon bulunamadı")
+        
         istasyon1 = self.istasyonlar[istasyon1_id]
         istasyon2 = self.istasyonlar[istasyon2_id]
         istasyon1.komsu_ekle(istasyon2, sure)
