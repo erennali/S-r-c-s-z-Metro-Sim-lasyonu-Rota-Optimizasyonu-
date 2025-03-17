@@ -1,6 +1,9 @@
 from collections import defaultdict, deque
 import heapq
 from typing import Dict, List, Set, Tuple, Optional
+import networkx as nx
+import matplotlib.pyplot as plt
+import random
 
 class Istasyon:
     """
@@ -183,6 +186,98 @@ class MetroAgi:
                     
         return None
 
+    def gorsellestir(self, rota: Optional[List[Istasyon]] = None, rota_bilgisi: str = "", ax: Optional[plt.Axes] = None) -> None:
+        """
+        Metro ağını görselleştirir.
+        
+        Args:
+            rota (Optional[List[Istasyon]]): Vurgulanacak rota (varsa)
+            rota_bilgisi (str): Rota hakkında bilgi metni
+            ax (Optional[plt.Axes]): Matplotlib ekseni
+        """
+        G = nx.Graph()
+        
+        # Her hat için sabit renkler kullan
+        hat_renkleri = {
+            "Kırmızı Hat": "#FF0000",
+            "Mavi Hat": "#0000FF",
+            "Turuncu Hat": "#FFA500"
+        }
+        
+        # İstasyonları ve bağlantıları ekle
+        for istasyon in self.istasyonlar.values():
+            # İstasyonların pozisyonlarını hatlarına göre belirle
+            if istasyon.hat == "Kırmızı Hat":
+                pos_x = 0.2 + random.random() * 0.1  # Sol tarafta
+            elif istasyon.hat == "Mavi Hat":
+                pos_x = 0.4 + random.random() * 0.1  # Orta tarafta
+            else:  # Turuncu Hat
+                pos_x = 0.6 + random.random() * 0.1  # Sağ tarafta
+            
+            G.add_node(istasyon.idx, 
+                      ad=istasyon.ad,
+                      hat=istasyon.hat,
+                      pos=(pos_x, random.random()))
+            
+            for komsu, sure in istasyon.komsular:
+                G.add_edge(istasyon.idx, komsu.idx, 
+                          sure=sure,
+                          hat=istasyon.hat)
+        
+        # Eksen ayarları
+        if ax is None:
+            ax = plt.gca()
+        
+        # İstasyonları çiz
+        pos = nx.get_node_attributes(G, 'pos')
+        nx.draw_networkx_nodes(G, pos, node_size=1000, node_color='white', 
+                             edgecolors='black', linewidths=2, ax=ax)
+        
+        # İstasyon isimlerini ekle
+        nx.draw_networkx_labels(G, pos, 
+                              labels={node: G.nodes[node]['ad'] for node in G.nodes()},
+                              font_size=10, font_weight='bold', ax=ax)
+        
+        # Bağlantıları çiz
+        for hat in self.hatlar.keys():
+            edges = [(u, v) for (u, v, d) in G.edges(data=True) if d['hat'] == hat]
+            nx.draw_networkx_edges(G, pos, edgelist=edges, 
+                                 edge_color=hat_renkleri[hat],
+                                 width=3, ax=ax)
+            
+            # Hat isimlerini ekle
+            if edges:
+                edge = edges[0]
+                pos1 = pos[edge[0]]
+                pos2 = pos[edge[1]]
+                pos_mid = ((pos1[0] + pos2[0])/2, (pos1[1] + pos2[1])/2)
+                ax.text(pos_mid[0], pos_mid[1], hat,
+                       color=hat_renkleri[hat],
+                       fontsize=8, fontweight='bold',
+                       bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
+        
+        # Rota varsa vurgula
+        if rota:
+            rota_edges = [(rota[i].idx, rota[i+1].idx) 
+                         for i in range(len(rota)-1)]
+            nx.draw_networkx_edges(G, pos, edgelist=rota_edges,
+                                 edge_color='red',
+                                 width=5, ax=ax)
+            
+            # Rota bilgisini ekle
+            rota_detay = f"Başlangıç: {rota[0].ad}\n"
+            rota_detay += f"Hedef: {rota[-1].ad}\n"
+            rota_detay += f"{rota_bilgisi}"
+            
+            ax.text(0.02, 0.98, rota_detay,
+                   transform=ax.transAxes,
+                   fontsize=12,
+                   bbox=dict(facecolor='white', alpha=0.8, edgecolor='black'),
+                   verticalalignment='top')
+        
+        ax.set_title("Metro Ağı Görselleştirmesi", fontsize=14, pad=20)
+        ax.axis('off')
+
 # Örnek Kullanım
 if __name__ == "__main__":
     metro = MetroAgi()
@@ -230,35 +325,68 @@ if __name__ == "__main__":
     # Test senaryoları
     print("\n=== Test Senaryoları ===")
     
+    # Tüm görselleştirmeleri tek pencerede göster
+    plt.figure(figsize=(20, 15))
+    
+    # Ana metro ağı
+    plt.subplot(2, 2, 1)
+    metro.gorsellestir()
+    
     # Senaryo 1: AŞTİ'den OSB'ye
     print("\n1. AŞTİ'den OSB'ye:")
+    plt.subplot(2, 2, 2)
     rota = metro.en_az_aktarma_bul("M1", "K4")
     if rota:
-        print("En az aktarmalı rota:", " -> ".join(i.ad for i in rota))
+        rota_bilgisi = "En az aktarmalı rota:\n" + " -> ".join(i.ad for i in rota)
+        print(rota_bilgisi)
+        metro.gorsellestir(rota, rota_bilgisi)
     
+    plt.subplot(2, 2, 3)
     sonuc = metro.en_hizli_rota_bul("M1", "K4")
     if sonuc:
         rota, sure = sonuc
-        print(f"En hızlı rota ({sure} dakika):", " -> ".join(i.ad for i in rota))
+        rota_bilgisi = f"En hızlı rota ({sure} dakika):\n" + " -> ".join(i.ad for i in rota)
+        print(rota_bilgisi)
+        metro.gorsellestir(rota, rota_bilgisi)
     
     # Senaryo 2: Batıkent'ten Keçiören'e
     print("\n2. Batıkent'ten Keçiören'e:")
+    plt.subplot(2, 2, 4)
     rota = metro.en_az_aktarma_bul("T1", "T4")
     if rota:
-        print("En az aktarmalı rota:", " -> ".join(i.ad for i in rota))
+        rota_bilgisi = "En az aktarmalı rota:\n" + " -> ".join(i.ad for i in rota)
+        print(rota_bilgisi)
+        metro.gorsellestir(rota, rota_bilgisi)
     
+    # Yeni bir pencere aç
+    plt.figure(figsize=(20, 15))
+    
+    # Senaryo 2'nin devamı
+    plt.subplot(2, 2, 1)
     sonuc = metro.en_hizli_rota_bul("T1", "T4")
     if sonuc:
         rota, sure = sonuc
-        print(f"En hızlı rota ({sure} dakika):", " -> ".join(i.ad for i in rota))
+        rota_bilgisi = f"En hızlı rota ({sure} dakika):\n" + " -> ".join(i.ad for i in rota)
+        print(rota_bilgisi)
+        metro.gorsellestir(rota, rota_bilgisi)
     
     # Senaryo 3: Keçiören'den AŞTİ'ye
     print("\n3. Keçiören'den AŞTİ'ye:")
+    plt.subplot(2, 2, 2)
     rota = metro.en_az_aktarma_bul("T4", "M1")
     if rota:
-        print("En az aktarmalı rota:", " -> ".join(i.ad for i in rota))
+        rota_bilgisi = "En az aktarmalı rota:\n" + " -> ".join(i.ad for i in rota)
+        print(rota_bilgisi)
+        metro.gorsellestir(rota, rota_bilgisi)
     
+    plt.subplot(2, 2, 3)
     sonuc = metro.en_hizli_rota_bul("T4", "M1")
     if sonuc:
         rota, sure = sonuc
-        print(f"En hızlı rota ({sure} dakika):", " -> ".join(i.ad for i in rota)) 
+        rota_bilgisi = f"En hızlı rota ({sure} dakika):\n" + " -> ".join(i.ad for i in rota)
+        print(rota_bilgisi)
+        metro.gorsellestir(rota, rota_bilgisi)
+    
+    # Tüm grafikleri göster
+    plt.tight_layout()
+    plt.show() 
