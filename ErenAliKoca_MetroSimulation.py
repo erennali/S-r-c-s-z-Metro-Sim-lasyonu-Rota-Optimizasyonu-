@@ -75,6 +75,15 @@ class MetroAgi:
         """
         A* algoritması kullanarak en hızlı rotayı bulur.
         
+        Args:
+            baslangic_id (str): Başlangıç istasyonunun kimlik numarası
+            hedef_id (str): Hedef istasyonunun kimlik numarası
+            
+        Returns:
+            Optional[Tuple[List[Istasyon], int]]: (rota, toplam_süre) veya None (rota bulunamazsa)
+            
+        Raises:
+            KeyError: İstasyon bulunamadığında
         """
         if baslangic_id not in self.istasyonlar or hedef_id not in self.istasyonlar:
             raise KeyError("İstasyon bulunamadı")
