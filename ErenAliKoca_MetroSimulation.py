@@ -3,13 +3,36 @@ import heapq
 from typing import Dict, List, Set, Tuple, Optional
 
 class Istasyon:
+    """
+    Metro istasyonunu temsil eden sınıf.
+    
+    Attributes:
+        idx (str): İstasyonun benzersiz kimlik numarası
+        ad (str): İstasyonun adı
+        hat (str): İstasyonun bulunduğu metro hattı
+        komsular (List[Tuple['Istasyon', int]]): Komşu istasyonlar ve aralarındaki süreler
+    """
     def __init__(self, idx: str, ad: str, hat: str):
+        if not idx or not ad or not hat:
+            raise ValueError("İstasyon bilgileri boş olamaz")
         self.idx = idx
         self.ad = ad
         self.hat = hat
         self.komsular: List[Tuple['Istasyon', int]] = []  # (istasyon, süre) tuple'ları
 
-    def komsu_ekle(self, istasyon: 'Istasyon', sure: int):
+    def komsu_ekle(self, istasyon: 'Istasyon', sure: int) -> None:
+        """
+        Komşu istasyon ekler.
+        
+        Args:
+            istasyon (Istasyon): Eklenecek komşu istasyon
+            sure (int): İki istasyon arasındaki süre (dakika)
+            
+        Raises:
+            ValueError: Süre negatif olduğunda
+        """
+        if sure < 0:
+            raise ValueError("İstasyonlar arası süre negatif olamaz")
         self.komsular.append((istasyon, sure))
 
 class MetroAgi:
