@@ -33,6 +33,15 @@ class MetroAgi:
         """
         BFS algoritması kullanarak en az aktarmalı rotayı bulur.
         
+        Args:
+            baslangic_id (str): Başlangıç istasyonunun kimlik numarası
+            hedef_id (str): Hedef istasyonunun kimlik numarası
+            
+        Returns:
+            Optional[List[Istasyon]]: Bulunan rota veya None (rota bulunamazsa)
+            
+        Raises:
+            KeyError: İstasyon bulunamadığında
         """
         if baslangic_id not in self.istasyonlar or hedef_id not in self.istasyonlar:
             raise KeyError("İstasyon bulunamadı")
