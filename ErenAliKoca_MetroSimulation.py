@@ -59,28 +59,40 @@ class MetroAgi:
 
 
     def en_hizli_rota_bul(self, baslangic_id: str, hedef_id: str) -> Optional[Tuple[List[Istasyon], int]]:
-        """A* algoritması kullanarak en hızlı rotayı bulur
-        
-        Bu fonksiyonu tamamlayın:
-        1. Başlangıç ve hedef istasyonların varlığını kontrol edin
-        2. A* algoritmasını kullanarak en hızlı rotayı bulun
-        3. Rota bulunamazsa None, bulunursa (istasyon_listesi, toplam_sure) tuple'ı döndürün
-        4. Fonksiyonu tamamladıktan sonra, # TODO ve pass satırlarını kaldırın
-        
-        İpuçları:
-        - heapq modülünü kullanarak bir öncelik kuyruğu oluşturun, HINT: pq = [(0, id(baslangic), baslangic, [baslangic])]
-        - Ziyaret edilen istasyonları takip edin
-        - Her adımda toplam süreyi hesaplayın
-        - En düşük süreye sahip rotayı seçin
         """
-        # TODO: Bu fonksiyonu tamamlayın
-        pass
+        A* algoritması kullanarak en hızlı rotayı bulur.
+        
+        """
         if baslangic_id not in self.istasyonlar or hedef_id not in self.istasyonlar:
-            return None
+            raise KeyError("İstasyon bulunamadı")
 
         baslangic = self.istasyonlar[baslangic_id]
         hedef = self.istasyonlar[hedef_id]
         ziyaret_edildi = set()
+        
+        # (toplam_süre + heuristic, istasyon_id, istasyon, rota, toplanan_süre)
+        pq = [(0 + self.heuristic(baslangic, hedef), id(baslangic), baslangic, [baslangic], 0)]
+        
+        while pq:
+            _, _, mevcut_istasyon, mevcut_rota, toplam_sure = heapq.heappop(pq)
+            
+            if mevcut_istasyon.idx == hedef_id:
+                return (mevcut_rota, toplam_sure)
+                
+            if mevcut_istasyon in ziyaret_edildi:
+                continue
+                
+            ziyaret_edildi.add(mevcut_istasyon)
+            
+            for komsu_istasyon, sure in mevcut_istasyon.komsular:
+                if komsu_istasyon not in ziyaret_edildi:
+                    yeni_sure = toplam_sure + sure
+                    yeni_rota = mevcut_rota + [komsu_istasyon]
+                    
+                    heapq.heappush(pq, (yeni_sure + self.heuristic(komsu_istasyon, hedef), 
+                                      id(komsu_istasyon), komsu_istasyon, yeni_rota, yeni_sure))
+                    
+        return None
 
 # Örnek Kullanım
 if __name__ == "__main__":
