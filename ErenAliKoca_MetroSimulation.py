@@ -58,6 +58,19 @@ class MetroAgi:
         return None       
 
 
+    def heuristic(self, istasyon: Istasyon, hedef: Istasyon) -> int:
+        """
+        A* algoritması için heuristic fonksiyonu.
+        
+        Args:
+            istasyon (Istasyon): Mevcut istasyon
+            hedef (Istasyon): Hedef istasyon
+            
+        Returns:
+            int: Tahmini süre
+        """
+        return 1  # Basit bir heuristic: her istasyon arası 1 dakika
+
     def en_hizli_rota_bul(self, baslangic_id: str, hedef_id: str) -> Optional[Tuple[List[Istasyon], int]]:
         """
         A* algoritması kullanarak en hızlı rotayı bulur.
